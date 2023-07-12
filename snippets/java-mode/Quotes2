@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Quotes2
+# key: k
+# --
+"$1"$0

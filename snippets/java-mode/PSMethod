@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: PSMethod
+# key: public static
+# --
+public static $1($2) {
+    $0
+}

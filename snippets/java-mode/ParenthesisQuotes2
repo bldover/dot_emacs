@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: ParenthesisQuotes2
+# key: l
+# --
+("$1")$0

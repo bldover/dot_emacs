@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: IdentificationHeader
+# key: idh
+# --
+/**
+ *
+ * @author Bradley Dover
+ * @version $0
+ **/

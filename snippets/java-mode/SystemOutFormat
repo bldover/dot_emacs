@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: SystemOutFormat
+# key: sof
+# --
+System.out.format($0);

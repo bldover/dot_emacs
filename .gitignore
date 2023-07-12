@@ -1,0 +1,11 @@
+%backup%~
+.mc-lists.el
+auto-save-list/
+backups/
+bookmarks
+elpa/
+history
+recentf
+server/
+tree-sitter/
+url/

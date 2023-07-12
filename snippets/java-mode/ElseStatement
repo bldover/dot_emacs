@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: ElseStatement
+# key: else
+# --
+else {
+    $0
+}

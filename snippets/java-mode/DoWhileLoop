@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: DoWhileLoop
+# key: dowhile
+# --
+do {
+   $0
+} while ($1);

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Parenthesis2
+# key: j
+# --
+($1)$0

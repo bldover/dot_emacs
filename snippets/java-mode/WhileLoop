@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: WhileLoop
+# key: while
+# --
+while ($1) {
+    $0
+}

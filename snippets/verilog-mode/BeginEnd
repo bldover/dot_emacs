@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: BeginEnd
+# key: begin
+# --
+begin
+  $0
+end

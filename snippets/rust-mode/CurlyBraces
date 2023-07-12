@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Curly Braces
+# key: {
+# --
+{
+    $0
+}

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: SystemOutPrint
+# key: sop
+# --
+System.out.print($1);$0
