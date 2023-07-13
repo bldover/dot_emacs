@@ -60,8 +60,9 @@
 (use-package ispell)
 
 ;; Yasnippet
-(use-package yasnippet)
-(yas-global-mode 1)
+(use-package yasnippet
+  :config
+  (yas-global-mode 1))
 
 ;; Rust Mode
 (autoload 'rust-mode "rust-mode" nil t)
