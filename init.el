@@ -12,6 +12,7 @@
 (setq use-dialog-box nil)
 
 (tool-bar-mode 0)
+(menu-bar-mode 0)
 (scroll-bar-mode -1)
 (show-paren-mode 1)
 (delete-selection-mode 1)
@@ -25,9 +26,6 @@
 (setq-default indent-tabs-mode nil)
 (setq-default tab-width 4)
 ;;(setq indent-line-function 'insert-tab)
-
-;; Font size
-(set-face-attribute 'default nil :height 120)
 
 ;; Buffer history
 (savehist-mode 1)
@@ -43,7 +41,7 @@
 
 ;; Line numbering
 (global-display-line-numbers-mode 1)
-(setq display-line-numbers 'relative)
+(setq display-line-numbers-type 'relative)
 
 ;; Backup and autosave file locations
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups/")))
@@ -51,7 +49,9 @@
 
 ;; Theme
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(load-theme 'spacemacs-dark t)
+(use-package spacemacs-theme
+  :config
+  (load-theme 'spacemacs-dark t))
 
 ;; Spellchecker
 (add-to-list 'exec-path "C:/Program Files (x86)/Aspell/bin/")
@@ -123,13 +123,6 @@
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
 ;;(add-hook 'tsx-ts-mode-hook #'setup-tide-mode)
 
-;; BQ SQL
-(add-to-list 'load-path
-             "~/.emacs.d/plugins/bigquery-mode")
-(use-package sql-indent)
-(use-package bigquery-mode)
-(use-package bqm-names)
-
 ;; Multiple cursors
 (use-package multiple-cursors
   :bind (("C-<" . mc/mark-previous-like-this)
@@ -146,6 +139,12 @@
 (use-package org-autolist
   :hook (org-mode . org-autolist-mode))
 
+;; System-specific configs
+(when (string-equal "gnu/linux" system-type)
+  (load-file "~/.emacs.d/wsl-init.el"))
+
+(when (string-equal "windows-nt" system-type)
+  (load-file "~/.emacs.d/win-init.el"))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
