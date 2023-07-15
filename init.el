@@ -1,3 +1,9 @@
+;; Debug
+;;(setq debug-on-error t)
+
+;; Debugging commands
+;; trace-function -> func-name
+
 ;; Package management
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -54,11 +60,8 @@
   :config
   (load-theme 'spacemacs-dark t))
 
-;; Spellchecker
-(add-to-list 'exec-path "C:/Program Files (x86)/Aspell/bin/")
-(setq ispell-program-name "aspell")
-(setq ispell-personal-dictionary "C:/Program Files (x86)/Aspell/dict/en_US.multi")
-(use-package ispell)
+;; Treesitter Grammars
+(add-to-list 'load-path "~/.emacs.d/treesitter/")
 
 ;; Yasnippet
 (use-package yasnippet
@@ -110,19 +113,13 @@
   (company-mode +1)
   (setq tab-width 2))
 
-(use-package web-mode)
-(add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
-(add-hook 'web-mode-hook
-          (lambda ()
-            (when (string-equal "tsx" (file-name-extension buffer-file-name))
-              (setup-tide-mode))))
-;; enable typescript-tslint checker
-(flycheck-add-mode 'typescript-tslint 'web-mode)
-
 (setq company-tooltip-align-annotations t)
+;; (setq tide-tsserver-process-environment '("TSS_LOG=-level verbose -file /tmp/tss.log"))
+;; (setq tide-node-executable '"/usr/bin/node")
+
 (add-hook 'before-save-hook 'tide-format-before-save)
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
-;;(add-hook 'tsx-ts-mode-hook #'setup-tide-mode)
+(add-hook 'tsx-ts-mode-hook #'setup-tide-mode)
 
 ;; Multiple cursors
 (use-package multiple-cursors
