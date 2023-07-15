@@ -1,4 +1,4 @@
-; Package management
+g;; Package management
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
@@ -10,6 +10,7 @@
 (setq-default word-wrap t)
 (setq-default column-number-mode t)
 (setq use-dialog-box nil)
+(setq-default cursor-type 'box)
 
 (tool-bar-mode 0)
 (menu-bar-mode 0)
