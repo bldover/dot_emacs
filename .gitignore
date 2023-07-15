@@ -3,9 +3,11 @@
 auto-save-list/
 backups/
 bookmarks
+eln-cache/
 elpa/
 history
 recentf
 server/
+transient/
 tree-sitter/
 url/
