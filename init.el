@@ -167,7 +167,7 @@
 (defun setup-tide ()
   (tide-setup)
   (tide-hl-identifier-mode t)
-  (setq tab-width 2)
+  (setq tab-width 2))
 
 (use-package tide
   :after
