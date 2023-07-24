@@ -33,9 +33,26 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
+;; Execute region in shell
+(defun shell-region (start end)
+  "execute region in an inferior shell"
+  (interactive "r")
+  (shell-command  (buffer-substring-no-properties start end)))
+
+(defun shell-region-and-jsonify-output (start end)
+  "execute region in an inferior shell"
+  (interactive "r")
+  (shell-command  (buffer-substring-no-properties start end))
+  (other-window -1)
+  (json-mode)
+  (json-pretty-print-buffer-ordered))
+
 ;; Some keybindings
 (global-set-key (kbd "M-j") 'join-line)
 (global-set-key (kbd "M-g") 'goto-line)
+(global-set-key (kbd "C-x M-o") "\C-u\-1\C-x\o") ; reverse window switch
+(global-set-key (kbd "C-c M-|") 'shell-region)
+(global-set-key (kbd "C-c C-M-|") 'shell-region-and-jsonify-output)
 
 ;; Tabbing
 (setq-default indent-tabs-mode nil)
@@ -54,10 +71,29 @@
 ;; Line numbering
 (use-package display-line-numbers
   :defines
-  (display-line-numbers-type)
+  (display-line-numbers-type display-line-numbers-exempt-modes)
   :config
+;;   (defcustom display-line-numbers-exempt-modes
+;;     '(vterm-mode eshell-mode shell-mode term-mode ansi-term-mode org-mode)
+;;     "Major modes on which to disable line numbers."
+;;     :group 'display-line-numbers
+;;     :type 'list
+;;     :version "green")
+
+;;   (defun display-line-numbers--turn-on ()
+;;     "Turn on line numbers except for certain major modes.
+;; Exempt major modes are defined in `display-line-numbers-exempt-modes'."
+;;     (unless (or (minibufferp)
+;;                 (member major-mode display-line-numbers-exempt-modes))
+;;       (display-line-numbers-mode)))
   (global-display-line-numbers-mode 1)
-  (setq display-line-numbers-type 'relative))
+  (setq display-line-numbers-type 'relative)
+  (setq display-line-numbers-width-start t))
+
+;; Variable vs fixed widths
+(use-package mixed-pitch
+  :hook
+  (text-mode . mixed-pitch-mode))
 
 ;; Backup and autosave file locations
 (setq backup-directory-alist '(("." . "~/.emacs.d/backups/")))
@@ -114,7 +150,35 @@
   :bind
   ("M-m" . er/expand-region))
 
-;; Org mode bullets
+
+;; Org mode prettify
+;; partially stolen from https://zzamboni.org/post/beautifying-org-mode-in-emacs/
+(use-package org
+  :config
+  (setq org-hide-emphasis-markers t)
+  (setq org-hide-leading-stars t)
+  (custom-theme-set-faces
+   'user
+   '(org-block ((t (:inherit fixed-pitch))))
+   '(org-code ((t (:inherit (shadow fixed-pitch)))))
+   '(org-document-info ((t (:foreground "dark orange"))))
+   '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+   '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
+   '(org-link ((t (:foreground "royal blue" :underline t))))
+   '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+   '(org-property-value ((t (:inherit fixed-pitch))) t)
+   '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+   '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+   '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+   '(org-verbatim ((t (:inherit (shadow fixed-pitch)))))
+   '(variable-pitch ((t (:family "ETBembo" :height 180 :weight thin))))
+   '(fixed-pitch ((t ( :family "Fira Code Retina" :height 160))))))
+
+(use-package org-indent
+  :hook
+  (org-mode . org-indent-mode))
+
+;; Org mode better lists
 (use-package org-autolist
   :hook
   (org-mode . org-autolist-mode))
@@ -134,6 +198,12 @@
   :config
   (setq company-tooltip-align-annotations t)
   (global-company-mode))
+
+;; Company front-end - prettier box
+(use-package company-box
+  :after
+  (company)
+  :hook (company-mode . company-box-mode))
 
 ;; Flycheck - autolinter
 (use-package flycheck
@@ -158,8 +228,17 @@
 ;; Treesitter Grammars
 (add-to-list 'load-path "~/.emacs.d/treesitter/")
 
+;; not good do something else idk
+(defun init-json-mode-indent ()
+  (setq js-indent-level 4))
+
+;; json mode
+(use-package json-mode)
+
 ;; Javascript Mode
 (use-package js
+  :hook
+  (json-mode . init-json-mode-indent)
   :config
   (setq js-indent-level 2))
 
@@ -188,3 +267,31 @@
 
 (when (string-equal "windows-nt" system-type)
   (load-file "~/.emacs.d/win-init.el"))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-fontify-todo-headline t)
+ '(package-selected-packages
+   '(json-mode company-box mixed-pitch org-autolist typescript-mode xclip expand-region multiple-cursors web-mode company tide magit rust-mode yasnippet spacemacs-theme)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(fixed-pitch ((t (:family "Fira Code Retina" :height 160))))
+ '(org-block ((t (:inherit fixed-pitch))))
+ '(org-code ((t (:inherit (shadow fixed-pitch)))))
+ '(org-document-info ((t (:foreground "dark orange"))))
+ '(org-document-info-keyword ((t (:inherit (shadow fixed-pitch)))))
+ '(org-indent ((t (:inherit (org-hide fixed-pitch)))))
+ '(org-level-1 ((t (:inherit (bold variable-width) :extend nil :foreground "#4f97d7" :height 1.3))))
+ '(org-link ((t (:foreground "royal blue" :underline t))))
+ '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+ '(org-property-value ((t (:inherit fixed-pitch))) t)
+ '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
+ '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
+ '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
+ '(org-verbatim ((t (:inherit (shadow fixed-pitch)))))
+ '(variable-pitch ((t (:family "ETBembo" :height 180 :weight thin)))))

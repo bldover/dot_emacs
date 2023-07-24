@@ -19,13 +19,13 @@
   (package-refresh-contents))
 
 ;; List to modify to change which packages are installed
-(let ((package-list '(package use-package spacemacs-theme ispell yasnippet rust-mode magit
-                              tide company flycheck web-mode multiple-cursors expand-region xclip)))
+(let ((package-list '(package use-package spacemacs-theme ispell yasnippet rust-mode magit typescript-mode
+                              tide company flycheck web-mode multiple-cursors expand-region xclip org-autolist org-bullets)))
   (dolist (package package-list)
     (unless (package-installed-p package)
       (package-install package))))
 
-(let ((treesit-grammar-list '(c css elisp go html java javascript json python
+(let ((treesit-grammar-list '(c css elisp go html java javascript json python sql
                                 rust toml tsx typescript yaml))
       (treesit-language-source-alist
        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
@@ -48,6 +48,7 @@
          (ruby "https://github.com/tree-sitter/tree-sitter-ruby")
          (rust "https://github.com/tree-sitter/tree-sitter-rust")
          (scala "https://github.com/tree-sitter/tree-sitter-scala")
+         (sql "https://github.com/DerekStride/tree-sitter-sql" "gh-pages")
          (toml "https://github.com/tree-sitter/tree-sitter-toml")
          (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
          (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
