@@ -30,6 +30,7 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 (add-hook 'text-mode-hook 'turn-on-visual-line-mode)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
+(xclip-mode 1)
 
 ;; Enable non-default commands
 (put 'upcase-region 'disabled nil)
@@ -117,9 +118,9 @@
 (setq-default scroll-step 1) ;; keyboard scroll one line at a time
 
 ;; Window setup
-(add-to-list 'initial-frame-alist '(width . 88))
-(add-to-list 'default-frame-alist '(width . 88))
-(add-to-list 'initial-frame-alist '(fullscreen . maximized))
+;; (add-to-list 'initial-frame-alist '(width . 88))
+;; (add-to-list 'default-frame-alist '(width . 88))
+;; (add-to-list 'initial-frame-alist '(fullscreen . maximized))
 
 ;; Theme
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
@@ -307,6 +308,18 @@
   ((typescript-mode . setup-tide)
    (tsx-ts-mode . setup-tide)
    (web-mode . setup-tide)))
+
+;; Shell mode
+(defun shell-mode-hook-setup ()
+  "Set up `shell-mode'."
+
+  (setq-local company-backends '((company-files company-native-complete)))
+  ;; `company-native-complete' is better than `completion-at-point'
+  (local-set-key (kbd "TAB") 'company-complete)
+
+  ;; @see https://github.com/redguardtoo/emacs.d/issues/882
+  (setq-local company-idle-delay 1))
+(add-hook 'shell-mode-hook 'shell-mode-hook-setup)
 
 ;; Rust
 (autoload 'rust-mode "rust-mode" nil t)
