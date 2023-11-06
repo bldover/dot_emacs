@@ -1,5 +1,5 @@
 ;; Debug
-(setq debug-on-error t)
+;; (setq debug-on-error t)
 
 ;; Debugging commands
 ;; trace-function -> func-name
@@ -9,6 +9,7 @@
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
 (require 'use-package)
+(setq use-package-always-demand t)
 
 ;; Basics
 (setq-default visible-bell 1)
@@ -18,6 +19,7 @@
 (setq use-dialog-box nil)
 (setq-default cursor-type 'box)
 (setq inhibit-startup-screen t)
+(setq completion-styles '(flex))
 (tool-bar-mode 0)
 (menu-bar-mode 0)
 (display-time)
@@ -47,12 +49,14 @@
   (json-mode)
   (json-pretty-print-buffer-ordered))
 
-;; Some keybindings
+;; Convenience keybindings
 (global-set-key (kbd "M-j") 'join-line)
 (global-set-key (kbd "M-g") 'goto-line)
 (global-set-key (kbd "C-x M-o") "\C-u\-1\C-x\o") ; reverse window switch
+
+;; Execute in shell keybinds; useful for curling
 (global-set-key (kbd "C-c M-|") 'shell-region)
-(global-set-key (kbd "C-c C-M-|") 'shell-region-and-jsonify-output)
+(global-set-key (kbd "C-c C-M-|") 'shell-region-and-jsonify-output) ; doesn't work on terminal
 
 ;; Tabbing
 (setq-default indent-tabs-mode nil)
@@ -123,6 +127,52 @@
   :config
   (load-theme 'spacemacs-dark t))
 
+;; Helm
+(use-package helm
+  :defines
+  helm-command-prefix-key helm-google-suggest-use-curl-p helm-M-x-fuzzy-match
+  helm-buffers-fuzzy-matching helm-recentf-fuzzy-match helm-semantic-fuzzy-match
+  helm-imenu-fuzzy-match helm-locate-fuzzy-match helm-apropos-fuzzy-match
+  helm-lisp-fuzzy-completion helm-move-to-line-cycle-in-source helm-ff-search-library-in-sexp
+  helm-ff-file-name-history-use-recentf
+  :bind
+  (("M-x" . helm-M-x)
+   ("M-y" . helm-show-kill-ring)
+   ("C-x b" . helm-mini)
+   ("C-x C-f" . helm-find-files)
+   ("C-c h o" . helm-occur)
+   ("C-c h x" . helm-register)
+   ("C-h SPC" . helm-all-mark-rings))
+  :init
+  (setq helm-command-prefix-key "C-c h")
+  :config
+  (global-unset-key (kbd "C-x c"))
+  (when (executable-find "curl")
+    (setq helm-google-suggest-use-curl-p t))
+  (setq helm-M-x-fuzzy-match t)
+  (setq helm-buffers-fuzzy-matching t)
+  (setq helm-recentf-fuzzy-match t)
+  (setq helm-semantic-fuzzy-match t)
+  (setq helm-imenu-fuzzy-match t)
+  (setq helm-locate-fuzzy-match t)
+  (setq helm-apropos-fuzzy-match t)
+  (setq helm-lisp-fuzzy-completion t)
+  (setq helm-move-to-line-cycle-in-source t)
+  (setq helm-ff-search-library-in-sexp t)
+  (setq helm-ff-file-name-history-use-recentf t)
+  (add-to-list 'helm-sources-using-default-as-input 'helm-source-man-pages)
+  (helm-mode 1))
+
+;; Projectile
+(use-package projectile
+  :bind
+  (("C-c p" . projectile-command-map))
+  :config
+  (projectile-mode 1)
+  (setq projectile-completion-system 'helm)
+  (helm-projectile-on)
+  (setq projectile-switch-project-action 'helm-projectile))
+
 ;; Yasnippet
 (use-package yasnippet
   :config
@@ -139,11 +189,10 @@
 ;; Multiple cursors
 (use-package multiple-cursors
   :bind
-  (("C-<" . mc/mark-previous-like-this)
-   ("C->" . mc/mark-next-like-this)
-   ("C-c C->" . mc/mark-all-like-this)
-   ("C-c C-<" . mc/edit-lines)
-   ))
+  (("C-c m p" . mc/mark-previous-like-this)
+   ("C-c m n" . mc/mark-next-like-this)
+   ("C-c m a" . mc/mark-all-like-this)
+   ("C-c m l" . mc/edit-lines)))
 
 ;; Expand region
 (use-package expand-region
@@ -197,13 +246,14 @@
 (use-package company
   :config
   (setq company-tooltip-align-annotations t)
-  (global-company-mode))
+  (global-company-mode)
+  (add-to-list 'company-backends 'company-eshell-history))
 
 ;; Company front-end - prettier box
-(use-package company-box
-  :after
-  (company)
-  :hook (company-mode . company-box-mode))
+;(use-package company-box
+;  :after
+;  (company)
+;  :hook (company-mode . company-box-mode))
 
 ;; Flycheck - autolinter
 (use-package flycheck
@@ -274,7 +324,7 @@
  ;; If there is more than one, they won't work right.
  '(org-fontify-todo-headline t)
  '(package-selected-packages
-   '(json-mode company-box mixed-pitch org-autolist typescript-mode xclip expand-region multiple-cursors web-mode company tide magit rust-mode yasnippet spacemacs-theme)))
+   '(helm-projectile projectile helm org-bullets json-mode company-box mixed-pitch org-autolist typescript-mode xclip expand-region multiple-cursors web-mode company tide magit rust-mode yasnippet spacemacs-theme)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

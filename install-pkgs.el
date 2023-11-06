@@ -19,11 +19,36 @@
   (package-refresh-contents))
 
 ;; List to modify to change which packages are installed
-(let ((package-list '(package use-package spacemacs-theme ispell yasnippet rust-mode magit typescript-mode
-                              tide company flycheck web-mode multiple-cursors expand-region xclip org-autolist org-bullets)))
+(let ((package-list '(package use-package spacemacs-theme ispell yasnippet
+                              rust-mode magit typescript-mode company-box json-mode
+                              tide company flycheck web-mode multiple-cursors
+                              expand-region xclip org-autolist org-bullets helm
+                              helm-projectile projectile)))
   (dolist (package package-list)
     (unless (package-installed-p package)
       (package-install package))))
+
+
+
+
+(defun already-installed (grammar)
+  "Check if the language grammar for GRAMMAR has been previously installed.
+
+It will check for both Windows (.dll) or Linux installations (.so).
+
+Returns t if the grammar exists, nil otherwise"
+  (when (or (file-exists-p (get-file-path grammar ".so"))
+            (file-exists-p (get-file-path grammar ".dll")))
+    t))
+
+(defun get-file-path (grammar ext)
+  "Build the file path to the installation location of the grammar GRAMMAR.
+
+The function assumes grammars are installed to the default tree-sitter directory
+in the folder specified by the variable `user-emacs-directory'.
+
+The EXT extension should have the \".\" included"
+  (expand-file-name (concat "tree-sitter/libtree-sitter-" (prin1-to-string grammar) ext) user-emacs-directory))
 
 (let ((treesit-grammar-list '(c css elisp go html java javascript json python sql
                                 rust toml tsx typescript yaml))
@@ -57,24 +82,5 @@
     (unless (already-installed grammar)
       (message "Installing treesitter grammar for %s" grammar)
       (treesit-install-language-grammar grammar))))
-
-(defun already-installed (grammar)
-  "Check if the language grammar for GRAMMAR has been previously installed.
-
-It will check for both Windows (.dll) or Linux installations (.so).
-
-Returns t if the grammar exists, nil otherwise"
-  (when (or (file-exists-p (get-file-path grammar ".so"))
-            (file-exists-p (get-file-path grammar ".dll")))
-    t))
-
-(defun get-file-path (grammar ext)
-  "Build the file path to the installation location of the grammar GRAMMAR.
-
-The function assumes grammars are installed to the default tree-sitter directory
-in the folder specified by the variable `user-emacs-directory'.
-
-The EXT extension should have the \".\" included"
-  (expand-file-name (concat "tree-sitter/libtree-sitter-" (prin1-to-string grammar) ext) user-emacs-directory))
 
 ;;; install-pkgs.el ends here
