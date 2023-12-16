@@ -31,6 +31,7 @@
 (add-hook 'text-mode-hook 'turn-on-visual-line-mode)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (xclip-mode 1)
+(setq gc-cons-threshold 100000000)
 
 ;; Enable non-default commands
 (put 'upcase-region 'disabled nil)
@@ -58,6 +59,12 @@
 ;; Execute in shell keybinds; useful for curling
 (global-set-key (kbd "C-c M-|") 'shell-region)
 (global-set-key (kbd "C-c C-M-|") 'shell-region-and-jsonify-output) ; doesn't work on terminal
+
+;; Easily open scratch buffer ; doesn't work
+(defun switch-to-scratch-buffer ()
+    (switch-to-buffer (get-scratch-buffer-create)))
+
+;; (global-set-key (kbd "C-c b s") 'switch-to-scratch-buffer)
 
 ;; Tabbing
 (setq-default indent-tabs-mode nil)
@@ -245,16 +252,17 @@
 
 ;; Company - autocomplete
 (use-package company
+  :defines lsp-completion-provider
   :config
   (setq company-tooltip-align-annotations t)
-  (global-company-mode)
-  (add-to-list 'company-backends 'company-eshell-history))
+  (setq lsp-completion-provider :capf)
+  (global-company-mode))
 
 ;; Company front-end - prettier box
-;(use-package company-box
-;  :after
-;  (company)
-;  :hook (company-mode . company-box-mode))
+(use-package company-box
+  :after
+  (company)
+  :hook (company-mode . company-box-mode))
 
 ;; Flycheck - autolinter
 (use-package flycheck
@@ -279,12 +287,51 @@
 ;; Treesitter Grammars
 (add-to-list 'load-path "~/.emacs.d/treesitter/")
 
+;; Use ts modes
+(add-to-list 'major-mode-remap-alist '(java-mode . java-ts-mode))
+
 ;; not good do something else idk
 (defun init-json-mode-indent ()
   (setq js-indent-level 4))
 
 ;; json mode
 (use-package json-mode)
+
+;; lsp
+(use-package lsp-mode
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook
+  ((java-ts-mode . lsp-deferred)
+   (java-mode . lsp-deferred))
+  :commands lsp lsp-deferred)
+
+(use-package lsp-ui
+  :commands lsp-ui-mode)
+(use-package helm-lsp
+  :commands helm-lsp-workspace-symbol)
+(use-package lsp-treemacs
+  :commands lsp-treemacs-errors-list)
+
+(use-package lsp-java
+  :defines lsp-java-java-path lsp-java-configuration-runtimes
+  :init
+  (setq lsp-java-java-path "/usr/lib/jvm/java-17-openjdk-amd64/bin/java")
+  :config
+  (setq lsp-java-configuration-runtimes '[(:name "JavaSE-11"
+                                                 :path
+                                                 "/usr/lib/jvm/java-11-openjdk-amd64"
+                                                 :default t)
+    			                          (:name "JavaSE-1.8"
+                                                 :path
+                                                 "/usr/lib/jvm/java-8-openjdk-amd64")])
+  )
+
+;; (use-package lsp-java-boot)
+
+;; dap mode debugger
+(use-package dap-mode)
+(use-package dap-java)
 
 ;; Javascript Mode
 (use-package js
@@ -301,7 +348,7 @@
 
 (use-package tide
   :after
-  (typescript-mode web-mode company flycheck eldoc)
+  (typescript-mode web-mode company eldoc)
   :bind
   ("C-%" . tide-rename-symbol)
   :hook
@@ -337,7 +384,7 @@
  ;; If there is more than one, they won't work right.
  '(org-fontify-todo-headline t)
  '(package-selected-packages
-   '(helm-projectile projectile helm org-bullets json-mode company-box mixed-pitch org-autolist typescript-mode xclip expand-region multiple-cursors web-mode company tide magit rust-mode yasnippet spacemacs-theme)))
+   '(lsp-java dap-mode helm-lsp lsp-treemacs lsp-ui lsp-mode helm-projectile projectile helm org-bullets json-mode company-box mixed-pitch org-autolist typescript-mode xclip expand-region multiple-cursors web-mode company tide magit rust-mode yasnippet spacemacs-theme)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

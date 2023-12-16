@@ -11,3 +11,10 @@ server/
 transient/
 tree-sitter/
 url/
+.cache/
+.lsp-session-v1
+eclipse.jdt.ls/
+network-security.data
+projectile-bookmarks.eld
+recentf~
+workspace/

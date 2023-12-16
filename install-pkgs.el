@@ -19,11 +19,16 @@
   (package-refresh-contents))
 
 ;; List to modify to change which packages are installed
-(let ((package-list '(package use-package spacemacs-theme ispell yasnippet
-                              rust-mode magit typescript-mode company-box json-mode
-                              tide company flycheck web-mode multiple-cursors
-                              expand-region xclip org-autolist org-bullets helm
-                              helm-projectile projectile)))
+(let ((package-list '(package use-package spacemacs-theme
+                              rust-mode json-mode
+                              tide web-mode typescript-mode
+                              magit yasnippet helm
+                              company company-box flycheck ispell
+                              multiple-cursors expand-region xclip
+                              org-autolist org-bullets
+                              projectile helm-projectile
+                              lsp-mode lsp-ui lsp-treemacs helm-lsp dap-mode
+                              lsp-java)))
   (dolist (package package-list)
     (unless (package-installed-p package)
       (package-install package))))
