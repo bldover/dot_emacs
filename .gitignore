@@ -19,3 +19,5 @@ projectile-bookmarks.eld
 recentf~
 workspace/
 start.log
+.dap-breakpoints
+dap-ui-repl-go-history

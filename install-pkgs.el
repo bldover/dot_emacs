@@ -55,7 +55,7 @@ in the folder specified by the variable `user-emacs-directory'.
 The EXT extension should have the \".\" included"
   (expand-file-name (concat "tree-sitter/libtree-sitter-" (prin1-to-string grammar) ext) user-emacs-directory))
 
-(let ((treesit-grammar-list '(c css elisp go html java javascript json python sql
+(let ((treesit-grammar-list '(c css elisp go gomod html java javascript json python sql
                                 rust toml tsx typescript yaml))
       (treesit-language-source-alist
        '((bash "https://github.com/tree-sitter/tree-sitter-bash")
@@ -65,6 +65,7 @@ The EXT extension should have the \".\" included"
          (css "https://github.com/tree-sitter/tree-sitter-css")
          (elisp "https://github.com/Wilfred/tree-sitter-elisp")
          (go "https://github.com/tree-sitter/tree-sitter-go")
+         (gomod "https://github.com/camdencheek/tree-sitter-go-mod")
          (haskell "https://github.com/tree-sitter/tree-sitter-haskell")
          (html "https://github.com/tree-sitter/tree-sitter-html")
          (java "https://github.com/tree-sitter/tree-sitter-java")

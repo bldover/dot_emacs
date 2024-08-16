@@ -5,6 +5,8 @@
 ;; trace-function -> func-name
 
 ;; Package management
+(setq native-comp-async-report-warnings-errors :silent)
+
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
@@ -197,9 +199,10 @@
 ;; Multiple cursors
 (use-package multiple-cursors
   :bind
-  (("C-c m p" . mc/mark-previous-like-this)
-   ("C-c m n" . mc/mark-next-like-this)
+  (("M-p" . mc/mark-previous-like-this)
+   ("M-n" . mc/mark-next-like-this)
    ("C-c m a" . mc/mark-all-like-this)
+   ("C-c m d" . mc/mark-all-dwim)
    ("C-c m l" . mc/edit-lines)))
 
 ;; Expand region
@@ -256,13 +259,23 @@
   :config
   (setq company-tooltip-align-annotations t)
   (setq lsp-completion-provider :capf)
-  (global-company-mode))
+  (global-company-mode)
+  (defvar company-mode/enable-yas t
+    "Enable yasnippet for all backends.")
+  (defun company-mode/backend-with-yas (backend)
+    (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
+        backend
+      (append (if (consp backend) backend (list backend))
+              '(:with company-yasnippet))))
+  (setq company-backends (mapcar #'company-mode/backend-with-yas company-backends)))
 
 ;; Company front-end - prettier box
 (use-package company-box
   :after
   (company)
   :hook (company-mode . company-box-mode))
+
+
 
 ;; Flycheck - autolinter
 (use-package flycheck
@@ -289,6 +302,9 @@
 
 ;; Use ts modes
 (add-to-list 'major-mode-remap-alist '(java-mode . java-ts-mode))
+(add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
+(add-to-list 'major-mode-remap-alist '(go-dot-mod-mode . go-mod-ts-mode))
+(add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
 
 ;; not good do something else idk
 (defun init-json-mode-indent ()
@@ -303,8 +319,16 @@
   (setq lsp-keymap-prefix "C-c l")
   :hook
   ((java-ts-mode . lsp-deferred)
-   (java-mode . lsp-deferred))
-  :commands lsp lsp-deferred)
+   (java-mode . lsp-deferred)
+   (go-mode . lsp-deferred)
+   (go-dot-mod-mode . lsp-deferred)
+   (go-ts-mode . lsp-deferred)
+   (go-mod-ts-mode . lsp-deferred))
+  :commands lsp lsp-deferred
+  :config
+  (lsp-register-custom-settings
+   '(("gopls.completeUnimported" t t)
+     ("gopls.staticcheck" t t))))
 
 (use-package lsp-ui
   :commands lsp-ui-mode)
@@ -329,9 +353,26 @@
 
 ;; (use-package lsp-java-boot)
 
+;; go mode
+(defun go-config ()
+  (setq-local compile-command "go install")
+  (setq-local indent-tabs-mode t)
+  (add-hook 'before-save-hook 'gofmt-before-save nil t)
+  (add-hook 'before-save-hook 'lsp-organize-imports nil t))
+
+(use-package go-ts-mode
+  :hook
+  (go-ts-mode . go-config)
+  (go-mod-ts-mode . go-config)
+  :defines go-ts-mode-indent-offset
+  :config
+  (setq go-ts-mode-indent-offset 4))
+
+
 ;; dap mode debugger
 (use-package dap-mode)
 (use-package dap-java)
+(use-package dap-dlv-go)
 
 ;; Javascript Mode
 (use-package js
@@ -382,9 +423,11 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("c7ee965589b6049e4d0fd811eb9f61f6d9b212d1af27bf13721b937de7def9ba" "7fd8b914e340283c189980cd1883dbdef67080ad1a3a9cc3df864ca53bdc89cf" "eab123a5ed21463c780e17fc44f9ffc3e501655b966729a2d5a2072832abd3ac" default))
  '(org-fontify-todo-headline t)
  '(package-selected-packages
-   '(lsp-java dap-mode helm-lsp lsp-treemacs lsp-ui lsp-mode helm-projectile projectile helm org-bullets json-mode company-box mixed-pitch org-autolist typescript-mode xclip expand-region multiple-cursors web-mode company tide magit rust-mode yasnippet spacemacs-theme)))
+   '(helm-ag lsp-go go-projectile go-mode lsp-java dap-mode helm-lsp lsp-treemacs lsp-ui lsp-mode helm-projectile projectile helm org-bullets json-mode company-box mixed-pitch org-autolist typescript-mode xclip expand-region multiple-cursors web-mode company tide magit rust-mode yasnippet spacemacs-theme)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

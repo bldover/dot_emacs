@@ -18,5 +18,5 @@
     (setq clipboard (substring clipboard 0 -1)) ; Remove newline added by Powershell
     (insert clipboard)))
 
-(global-set-key (kbd "C-c C-c") 'wsl-copy)
-(global-set-key (kbd "C-c C-v") 'wsl-paste)
+(global-set-key (kbd "C-c c") 'wsl-copy)
+(global-set-key (kbd "C-c v") 'wsl-paste)
