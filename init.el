@@ -10,6 +10,7 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
 (package-initialize)
+(package-refresh-contents)
 (require 'use-package)
 (setq use-package-always-demand t)
 
@@ -33,6 +34,7 @@
 (add-hook 'text-mode-hook 'turn-on-visual-line-mode)
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (xclip-mode 1)
+(which-key-mode)
 (setq gc-cons-threshold 100000000)
 
 ;; Enable non-default commands
@@ -53,19 +55,28 @@
   (json-mode)
   (json-pretty-print-buffer-ordered))
 
-;; Convenience keybindings
+;; Movement keybindings
 (global-set-key (kbd "M-j") 'join-line)
 (global-set-key (kbd "M-g") 'goto-line)
 (global-set-key (kbd "C-x M-o") "\C-u\-1\C-x\o") ; reverse window switch
 
 ;; Execute in shell keybinds; useful for curling
 (global-set-key (kbd "C-c M-|") 'shell-region)
-(global-set-key (kbd "C-c C-M-|") 'shell-region-and-jsonify-output) ; doesn't work on terminal
+(global-set-key (kbd "C-c C-M-|") 'shell-region-and-jsonify-output) ; doesn't work on terminal due to key interpretation
 
-;; Easily open scratch buffer ; doesn't work
+;; Lisp eval rebinds - make keymap?
+(define-key global-map (kbd "C-x C-e") 'eval-expression) ; redefine from eval-last-sexp
+(define-key emacs-lisp-mode-map (kbd "C-c C-e") nil)     ; was eval-region-or-buffer
+(define-key emacs-lisp-mode-map (kbd "C-M-x") nil)       ; was eval-defun
+(define-key emacs-lisp-mode-map (kbd "C-x C-e e") 'eval-expression)
+(define-key emacs-lisp-mode-map (kbd "C-x C-e r") 'eval-region)
+(define-key emacs-lisp-mode-map (kbd "C-x C-e s") 'eval-last-sexp)
+(define-key emacs-lisp-mode-map (kbd "C-x C-e b") 'eval-buffer)
+(define-key emacs-lisp-mode-map (kbd "C-x C-e d") 'eval-defun)
+
+;; Easily open scratch buffer ; doesn't work :(
 (defun switch-to-scratch-buffer ()
-    (switch-to-buffer (get-scratch-buffer-create)))
-
+  (switch-to-buffer (get-scratch-buffer-create)))
 ;; (global-set-key (kbd "C-c b s") 'switch-to-scratch-buffer)
 
 ;; Tabbing
@@ -87,19 +98,19 @@
   :defines
   (display-line-numbers-type display-line-numbers-exempt-modes)
   :config
-;;   (defcustom display-line-numbers-exempt-modes
-;;     '(vterm-mode eshell-mode shell-mode term-mode ansi-term-mode org-mode)
-;;     "Major modes on which to disable line numbers."
-;;     :group 'display-line-numbers
-;;     :type 'list
-;;     :version "green")
+  ;;   (defcustom display-line-numbers-exempt-modes
+  ;;     '(vterm-mode eshell-mode shell-mode term-mode ansi-term-mode org-mode)
+  ;;     "Major modes on which to disable line numbers."
+  ;;     :group 'display-line-numbers
+  ;;     :type 'list
+  ;;     :version "green")
 
-;;   (defun display-line-numbers--turn-on ()
-;;     "Turn on line numbers except for certain major modes.
-;; Exempt major modes are defined in `display-line-numbers-exempt-modes'."
-;;     (unless (or (minibufferp)
-;;                 (member major-mode display-line-numbers-exempt-modes))
-;;       (display-line-numbers-mode)))
+  ;;   (defun display-line-numbers--turn-on ()
+  ;;     "Turn on line numbers except for certain major modes.
+  ;; Exempt major modes are defined in `display-line-numbers-exempt-modes'."
+  ;;     (unless (or (minibufferp)
+  ;;                 (member major-mode display-line-numbers-exempt-modes))
+  ;;       (display-line-numbers-mode)))
   (global-display-line-numbers-mode 1)
   (setq display-line-numbers-type 'relative)
   (setq display-line-numbers-width-start t))
@@ -275,8 +286,6 @@
   (company)
   :hook (company-mode . company-box-mode))
 
-
-
 ;; Flycheck - autolinter
 (use-package flycheck
   :after
@@ -288,6 +297,10 @@
   (flycheck-add-mode 'typescript-tslint 'web-mode)
   (global-flycheck-mode))
 
+;; ktlint https://github.com/pinterest/ktlint
+(use-package flycheck-kotlin
+  :config (flycheck-kotlin-setup))
+
 ;; Eldoc - Documention in buffer
 (use-package eldoc
   :after
@@ -298,7 +311,29 @@
    (web-mode . eldoc-mode)))
 
 ;; Treesitter Grammars
-(add-to-list 'load-path "~/.emacs.d/treesitter/")
+(use-package tree-sitter-langs)
+(tree-sitter-require 'bash)
+(tree-sitter-require 'c)
+(tree-sitter-require 'cmake)
+(tree-sitter-require 'cpp)
+(tree-sitter-require 'css)
+(tree-sitter-require 'elisp)
+(tree-sitter-require 'go)
+(tree-sitter-require 'html)
+(tree-sitter-require 'java)
+(tree-sitter-require 'javascript)
+(tree-sitter-require 'json)
+(tree-sitter-require 'kotlin)
+(tree-sitter-require 'make)
+(tree-sitter-require 'markdown)
+(tree-sitter-require 'python)
+(tree-sitter-require 'rust)
+(tree-sitter-require 'sql)
+(tree-sitter-require 'toml)
+(tree-sitter-require 'tsx)
+(tree-sitter-require 'typescript)
+(tree-sitter-require 'yaml)
+;; (add-to-list 'load-path "~/.emacs.d/treesitter/")
 
 ;; Use ts modes
 (add-to-list 'major-mode-remap-alist '(java-mode . java-ts-mode))
@@ -323,7 +358,8 @@
    (go-mode . lsp-deferred)
    (go-dot-mod-mode . lsp-deferred)
    (go-ts-mode . lsp-deferred)
-   (go-mod-ts-mode . lsp-deferred))
+   (go-mod-ts-mode . lsp-deferred)
+   (kotlin-mode . lsp-deferred)) ;; https://github.com/fwcd/kotlin-language-server
   :commands lsp lsp-deferred
   :config
   (lsp-register-custom-settings
@@ -407,10 +443,30 @@
 
   ;; @see https://github.com/redguardtoo/emacs.d/issues/882
   (setq-local company-idle-delay 1))
+
 (add-hook 'shell-mode-hook 'shell-mode-hook-setup)
 
 ;; Rust
 (autoload 'rust-mode "rust-mode" nil t)
+
+;; LLM - gptel
+(use-package gptel
+  :bind
+  (("C-c a s" . gptel-send)
+   ("C-c a m" . gptel-menu)
+   ("C-c a b" . gptel)
+   ("C-c a r" . gptel-rewrite))
+  :config
+  (setq ;; default backend
+   gptel-model 'claude-3-7-sonnet-20250219
+   gptel-backend (gptel-make-anthropic "Claude"
+                   :stream t
+                   :key gptel-api-key)) ;; .authinfo source
+  ;; extra backends
+  (gptel-make-ollama "Ollama"
+    :host "localhost:11434"
+    :stream t
+    :models '(qwen2.5-coder:32b)))
 
 ;; System-specific configs
 (when (string-equal "gnu/linux" system-type)
@@ -418,16 +474,27 @@
 
 (when (string-equal "windows-nt" system-type)
   (load-file "~/.emacs.d/win-init.el"))
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("c7ee965589b6049e4d0fd811eb9f61f6d9b212d1af27bf13721b937de7def9ba" "7fd8b914e340283c189980cd1883dbdef67080ad1a3a9cc3df864ca53bdc89cf" "eab123a5ed21463c780e17fc44f9ffc3e501655b966729a2d5a2072832abd3ac" default))
+   '("c7ee965589b6049e4d0fd811eb9f61f6d9b212d1af27bf13721b937de7def9ba"
+     "7fd8b914e340283c189980cd1883dbdef67080ad1a3a9cc3df864ca53bdc89cf"
+     "eab123a5ed21463c780e17fc44f9ffc3e501655b966729a2d5a2072832abd3ac"
+     default))
  '(org-fontify-todo-headline t)
  '(package-selected-packages
-   '(helm-ag lsp-go go-projectile go-mode lsp-java dap-mode helm-lsp lsp-treemacs lsp-ui lsp-mode helm-projectile projectile helm org-bullets json-mode company-box mixed-pitch org-autolist typescript-mode xclip expand-region multiple-cursors web-mode company tide magit rust-mode yasnippet spacemacs-theme)))
+   '(company company-box dap-mode expand-region flycheck-kotlin go-mode
+             go-projectile gptel helm helm-ag helm-lsp helm-projectile
+             helm-rg json-mode kotlin-mode kotlin-ts-mode lsp-go
+             lsp-java lsp-treemacs lsp-ui magit mixed-pitch
+             multiple-cursors org-autolist org-bullets projectile
+             rust-mode spacemacs-theme tide tree-sitter-langs
+             typescript-mode web-mode xclip yasnippet)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -442,7 +509,7 @@
  '(org-level-1 ((t (:inherit (bold variable-width) :extend nil :foreground "#4f97d7" :height 1.3))))
  '(org-link ((t (:foreground "royal blue" :underline t))))
  '(org-meta-line ((t (:inherit (font-lock-comment-face fixed-pitch)))))
- '(org-property-value ((t (:inherit fixed-pitch))) t)
+ '(org-property-value ((t (:inherit fixed-pitch))))
  '(org-special-keyword ((t (:inherit (font-lock-comment-face fixed-pitch)))))
  '(org-table ((t (:inherit fixed-pitch :foreground "#83a598"))))
  '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
