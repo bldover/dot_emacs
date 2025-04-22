@@ -20,6 +20,7 @@
 (setq-default native-comp-async-report-warnings-errors :silent)
 (setq gc-cons-threshold 100000000)
 (setq read-process-output-max (* 1024 1024)) ;; 1MB
+(global-set-key (kbd "C-x M-c") 'save-buffers-kill-emacs)
 
 ;; History tracking
 (recentf-mode t)
@@ -54,6 +55,7 @@
   ("C-h v" . helpful-variable)
   ("C-h k" . helpful-key)
   ("C-h x" . helpful-command)
+  ("C-h o" . helpful-symbol)
   ("C-h C-a" . helpful-at-point))
 
 ;; --- UI setup ---
@@ -75,8 +77,11 @@
 
 ;; Theme
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
-(use-package spacemacs-theme
-  :config (load-theme 'spacemacs-dark t))
+(use-package doom-themes
+  :config
+  (setq-default doom-themes-enable-italic nil)
+  (setq-default doom-themes-visual-bell-config t)
+  (load-theme 'doom-snazzy t))
 
 ;; --- Editor visuals ---
 (setq-default show-paren-mode t)
@@ -105,10 +110,20 @@
 ;; --- Modeline ---
 (display-time)
 
+;; modeline themes
+;; (use-package spaceline
+;;   :config
+;;   (spaceline-emacs-theme)
+;;   (spaceline-helm-mode))
+
+(use-package doom-modeline
+  :init (doom-modeline-mode 1))
+
 ;; --- Minibuffer ---
 (fset 'yes-or-no-p 'y-or-n-p)
+(setq-default completion-styles '(basic flex))
 
-;;
+;; Which key - show possible key completions
 (use-package which-key
   :init (which-key-mode)
   :config
@@ -116,6 +131,7 @@
   (setq-default which-key-idle-delay 0.5))
 
 ;; Helm
+;; Consider vertico, marginalia, consult, embark, orderless instead ?
 (use-package helm
   :defer 5
   :defines
@@ -162,9 +178,8 @@
   (setq-default helm-ff-search-library-in-sexp t)
   (setq-default helm-ff-file-name-history-use-recentf t)
   (add-to-list 'helm-sources-using-default-as-input 'helm-source-man-pages)
+  (setq helm-M-x-show-short-doc t)
   (helm-mode 1))
-
-(setq-default completion-styles '(basic flex))
 
 ;; --- Editor behavior ---
 (delete-selection-mode 1)
@@ -191,11 +206,6 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
-;; Yasnippet - completions
-(use-package yasnippet
-  :config
-  (yas-global-mode 1))
-
 ;; Multiple cursors
 (use-package multiple-cursors
   :bind
@@ -209,6 +219,37 @@
 (use-package expand-region
   :bind
   ("M-m" . er/expand-region))
+
+;; Flycheck - autolinter
+(use-package flycheck
+  :after
+  (web-mode)
+  :functions
+  (flycheck-add-mode)
+  :config
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (flycheck-add-mode 'typescript-tslint 'web-mode)
+  (global-flycheck-mode))
+
+;; ktlint https://github.com/pinterest/ktlint
+(use-package flycheck-kotlin
+  :hook (kotlin-mode . flycheck-mode)
+  :config (flycheck-kotlin-setup))
+
+;; Eldoc - Documention in buffer
+(use-package eldoc
+  :after
+  (web-mode typescript-mode)
+  :hook
+  ((typescript-mode . eldoc-mode)
+   (tsx-ts-mode . eldoc-mode)
+   (web-mode . eldoc-mode)))
+
+;; --- Completions ---
+;; yasnippet - completions
+(use-package yasnippet
+  :config
+  (yas-global-mode 1))
 
 ;; Company - autocomplete
 (use-package company
@@ -231,37 +272,53 @@
   (company)
   :hook (company-mode . company-box-mode))
 
-;; Flycheck - autolinter
-(use-package flycheck
-  :after
-  (web-mode)
-  :functions
-  (flycheck-add-mode)
-  :config
-  (setq flycheck-check-syntax-automatically '(save mode-enabled))
-  (flycheck-add-mode 'typescript-tslint 'web-mode)
-  (global-flycheck-mode))
-;; ktlint https://github.com/pinterest/ktlint
-(use-package flycheck-kotlin
-  :hook (kotlin-mode . flycheck-mode)
-  :config (flycheck-kotlin-setup))
+;; defun stolen from gptel
+(defun claude-api-key-from-auth-source ()
+  "Lookup Claude api key in the auth source."
+  (if-let* ((secret
+             (plist-get
+              (car (auth-source-search
+                    :host "api.anthropic.com"
+                    :user "apikey"
+                    :require '(:secret)))
+              :secret)))
+      (if (functionp secret)
+          (encode-coding-string (funcall secret) 'utf-8)
+        secret)
+    (user-error "No Claude API key found in the auth source")))
 
-;; Eldoc - Documention in buffer
-(use-package eldoc
-  :after
-  (web-mode typescript-mode)
-  :hook
-  ((typescript-mode . eldoc-mode)
-   (tsx-ts-mode . eldoc-mode)
-   (web-mode . eldoc-mode)))
+;; minuet - in-buffer AI suggestions
+(use-package minuet
+    :bind
+    (("C-c a m m" . #'minuet-complete-with-minibuffer)
+     ("C-c a m s" . #'minuet-show-suggestion)
+     ("C-c a m c" . #'minuet-configure-provider)
+
+     :map minuet-active-mode-map
+     ("M-p" . #'minuet-previous-suggestion)
+     ("M-n" . #'minuet-next-suggestion)
+     ("M-A" . #'minuet-accept-suggestion)
+     ("M-a" . #'minuet-accept-suggestion-line)
+     ("M-e" . #'minuet-dismiss-suggestion))
+    :init
+    ;; (add-hook 'prog-mode-hook #'minuet-auto-suggestion-mode)
+    :config
+    (setq minuet-provider 'claude)
+    (setq minuet-context-window 16000)
+    (setq minuet-context-ratio 85)
+    (setq minuet-request-timeout 30)
+
+    (plist-put minuet-claude-options :api-key 'claude-api-key-from-auth-source)
+    (plist-put minuet-claude-options :model "claude-3-5-haiku-20241022")
+    (plist-put minuet-claude-options :max_tokens 512))
 
 ;; LLM - gptel
 (use-package gptel
   :bind
-  (("C-c a s" . gptel-send)
-   ("C-c a m" . gptel-menu)
-   ("C-c a b" . gptel)
-   ("C-c a r" . gptel-rewrite))
+  (("C-c a g s" . gptel-send)
+   ("C-c a g m" . gptel-menu)
+   ("C-c a g b" . gptel)
+   ("C-c a g r" . gptel-rewrite))
   :config
   (setq ;; default backend
    gptel-model 'claude-3-7-sonnet-20250219
@@ -321,9 +378,8 @@
 (use-package magit
   :bind
   (("C-x g" . magit-status)
-   ("C-c g" . magit-dispatch)
-   ("C-c f" . magit-file-dispatch)
-   ))
+   ("C-c g d" . magit-dispatch)
+   ("C-c g f" . magit-file-dispatch)))
 
 ;; --- Org Mode ---
 ;; Org mode prettify
@@ -423,7 +479,6 @@
   "Set up `shell-mode'."
   (setq-local company-backends '((company-files company-native-complete)))
   ;; `company-native-complete' is better than `completion-at-point'
-  (local-set-key (kbd "TAB") 'company-complete)
   ;; @see https://github.com/redguardtoo/emacs.d/issues/882
   (setq-local company-idle-delay 2))
 (add-hook 'shell-mode-hook 'shell-mode-hook-setup)
@@ -448,7 +503,7 @@
 ;; JSON
 ;; not good do something else idk
 (defun init-json-mode-indent ()
-  (setq js-indent-level 4))
+  (setq-default js-indent-level 4))
 (use-package json-mode
   :hook (json-mode . init-json-mode-indent))
 
@@ -457,7 +512,7 @@
   :defines
   lsp-register-custom-settings
   :init
-  (setq lsp-keymap-prefix "C-c l")
+  (setq-default lsp-keymap-prefix "C-c l")
   :hook
   ((java-ts-mode . lsp-deferred)
    (java-mode . lsp-deferred)
@@ -468,6 +523,7 @@
    (kotlin-mode . lsp-deferred)) ;; https://github.com/fwcd/kotlin-language-server
   :commands lsp lsp-deferred
   :config
+  ()
   (lsp-register-custom-settings
    '(("gopls.completeUnimported" t t)
      ("gopls.staticcheck" t t))))
@@ -511,6 +567,9 @@
 (when (string-equal "windows-nt" system-type)
   (load-file "~/.emacs.d/win-init.el"))
 
+(provide 'init)
+
+;;; init.el ends here
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -522,7 +581,16 @@
      "eab123a5ed21463c780e17fc44f9ffc3e501655b966729a2d5a2072832abd3ac"
      default))
  '(org-fontify-todo-headline t)
- '(package-selected-packages nil))
+ '(package-selected-packages
+   '(company-box diminish doom-modeline doom-themes expand-region
+                 flycheck-kotlin go-projectile gptel helm-ag helm-lsp
+                 helm-projectile helm-rg helpful info+ json-mode
+                 kotlin-mode kotlin-ts-mode lsp-java lsp-ui magit
+                 marginalia minuet mixed-pitch multiple-cursors
+                 org-autolist org-bullets rust-mode spaceline
+                 spaceline-config spacemacs-theme tide
+                 tree-sitter-langs typescript-mode web-mode xclip
+                 yasnippet)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -543,7 +611,3 @@
  '(org-tag ((t (:inherit (shadow fixed-pitch) :weight bold :height 0.8))))
  '(org-verbatim ((t (:inherit (shadow fixed-pitch)))))
  '(variable-pitch ((t (:family "ETBembo" :height 180 :weight thin)))))
-
-(provide 'init)
-
-;;; init.el ends here
